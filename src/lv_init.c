@@ -42,7 +42,9 @@
 #if LV_USE_WINDOWS
     #include "drivers/windows/lv_windows_context.h"
 #endif
-
+#if LV_USE_DRAW_EVE
+    #include "draw/eve/lv_draw_eve.h"
+#endif
 /*********************
  *      DEFINES
  *********************/
@@ -192,6 +194,9 @@ void lv_init(void)
     lv_windows_platform_init();
 #endif
 
+#if LV_USE_DRAW_EVE
+    lv_draw_eve_init();
+#endif
     _lv_obj_style_init();
 
     /*Initialize the screen refresh system*/
