@@ -17,14 +17,7 @@
 #ifndef LV_CONF_H
 #define LV_CONF_H
 
-/***************************************************************************
-   ENABLE/DISABLE DRAW in BUFFER
-***************************************************************************/
-#define EVE_GPU_DRAW    1
 
-/***************************************************************************
-   ENABLE/DISABLE DRAW in BUFFER
-***************************************************************************/
 /*====================
    COLOR SETTINGS
  *====================*/
@@ -191,6 +184,7 @@
 
 /* Use EVE FT81X GPU. */
 #define LV_USE_DRAW_EVE 1
+
 
 /*=======================
  * FEATURE CONFIGURATION
@@ -382,7 +376,7 @@
 #define LV_FONT_MONTSERRAT_12 0
 #define LV_FONT_MONTSERRAT_14 1
 #define LV_FONT_MONTSERRAT_16 1
-#define LV_FONT_MONTSERRAT_18 0
+#define LV_FONT_MONTSERRAT_18 1
 #define LV_FONT_MONTSERRAT_20 0
 #define LV_FONT_MONTSERRAT_22 1
 #define LV_FONT_MONTSERRAT_24 1
@@ -738,7 +732,7 @@
 #define LV_USE_SNAPSHOT 0
 
 /*1: Enable system monitor component*/
-#define LV_USE_SYSMON   0
+#define LV_USE_SYSMON   1
 #if LV_USE_SYSMON
     /*Get the idle percentage. E.g. uint32_t my_get_idle(void);*/
     #define LV_SYSMON_GET_IDLE lv_timer_get_idle

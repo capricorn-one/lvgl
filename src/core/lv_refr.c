@@ -577,6 +577,7 @@ static void refr_invalid_areas(void)
  */
 static void layer_reshape_draw_buf(lv_layer_t * layer)
 {
+    #if !LV_USE_DRAW_EVE
     LV_ASSERT(lv_draw_buf_reshape(
                   layer->draw_buf,
                   layer->color_format,
@@ -584,6 +585,7 @@ static void layer_reshape_draw_buf(lv_layer_t * layer)
                   lv_area_get_height(&layer->buf_area),
                   0)
               != NULL);
+    #endif          
 }
 
 /**
