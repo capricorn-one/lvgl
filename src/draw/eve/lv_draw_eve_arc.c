@@ -278,8 +278,7 @@ static void draw_eve_arc(lv_draw_eve_unit_t * draw_unit, const lv_draw_arc_dsc_t
     while(end_angle >= 360)
         end_angle -= 360;
 
-    eve_scissor(draw_unit->base_unit.clip_area->x1, draw_unit->base_unit.clip_area->y1,
-                lv_area_get_width(draw_unit->base_unit.clip_area) + 1, lv_area_get_height(draw_unit->base_unit.clip_area) + 1);
+    eve_scissor(draw_unit->base_unit.clip_area->x1, draw_unit->base_unit.clip_area->y1, draw_unit->base_unit.clip_area->x2, draw_unit->base_unit.clip_area->y2);
 
     eve_save_context();
 

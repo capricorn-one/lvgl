@@ -132,8 +132,7 @@ void lv_draw_eve_image(lv_draw_eve_unit_t * draw_unit, const lv_draw_image_dsc_t
         EVE_start_cmd_burst();
     }
 
-    eve_scissor(draw_unit->base_unit.clip_area->x1, draw_unit->base_unit.clip_area->y1,
-                lv_area_get_width(draw_unit->base_unit.clip_area) + 1, lv_area_get_height(draw_unit->base_unit.clip_area) + 1);
+    eve_scissor(draw_unit->base_unit.clip_area->x1, draw_unit->base_unit.clip_area->y1, draw_unit->base_unit.clip_area->x2, draw_unit->base_unit.clip_area->y2);
 
     eve_save_context();
 

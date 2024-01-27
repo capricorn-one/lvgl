@@ -89,8 +89,8 @@ void lv_draw_eve_triangle(lv_draw_eve_unit_t * draw_unit, const lv_draw_triangle
     /*Be sure p[0] is on the top*/
     if(p[0].y > p[1].y) lv_point_swap(&p[0], &p[1]);
 
-    eve_scissor(draw_unit->base_unit.clip_area->x1, draw_unit->base_unit.clip_area->y1,
-                lv_area_get_width(draw_unit->base_unit.clip_area) + 1, lv_area_get_height(draw_unit->base_unit.clip_area) + 1);
+    eve_scissor(draw_unit->base_unit.clip_area->x1, draw_unit->base_unit.clip_area->y1, draw_unit->base_unit.clip_area->x2, draw_unit->base_unit.clip_area->y2);
+
     eve_save_context();
 
     eve_color(dsc->bg_color);

@@ -37,8 +37,20 @@ void lv_draw_eve_fill(lv_draw_eve_unit_t * draw_unit, const lv_draw_fill_dsc_t *
     int32_t bg_h = lv_area_get_height(coords);
     int32_t real_radius = LV_MIN3(bg_w / 2, bg_h / 2, rad);
 
-    eve_scissor(draw_unit->base_unit.clip_area->x1, draw_unit->base_unit.clip_area->y1,
-                lv_area_get_width(draw_unit->base_unit.clip_area) + 1, lv_area_get_height(draw_unit->base_unit.clip_area) + 1);
+    LV_LOG("FILL********\n");
+    LV_LOG("x1: %d\n", draw_unit->base_unit.clip_area->x1);
+    LV_LOG("y1: %d\n", draw_unit->base_unit.clip_area->y1);
+    LV_LOG("X2: %d\n", draw_unit->base_unit.clip_area->x2);
+    LV_LOG("y2: %d\n", draw_unit->base_unit.clip_area->y2);
+/*
+    LV_LOG("cx1: %d\n", coords->x1);
+    LV_LOG("cy1: %d\n", coords->y1);
+    LV_LOG("cx2: %d\n", coords->x2);
+    LV_LOG("cy2: %d\n", coords->y2);
+*/
+    LV_LOG("\n");
+
+    eve_scissor(draw_unit->base_unit.clip_area->x1, draw_unit->base_unit.clip_area->y1, draw_unit->base_unit.clip_area->x2, draw_unit->base_unit.clip_area->y2);
     eve_save_context();
 
     eve_color(dsc->color);
@@ -65,47 +77,6 @@ void lv_draw_eve_fill(lv_draw_eve_unit_t * draw_unit, const lv_draw_fill_dsc_t *
  *   STATIC FUNCTIONS
  **********************/
 
-static void eve_draw_rect_border(lv_draw_eve_unit_t * draw_unit, const lv_area_t * outer_area,
-                                 const lv_area_t * inner_area,
-                                 int32_t rout, int32_t rin, lv_color_t color, lv_opa_t opa)
-{
-
-    eve_save_context();
-    // test "Eve_mask_round(outer_area->x1, outer_area->y1, outer_area->x2, outer_area->y2, rout)";
-    eve_color(color);
-    eve_color_opa(opa);
-    eve_color_mask(0, 0, 0, 1);
-    eve_stencil_func(EVE_ALWAYS, 0, 1);
-    eve_stencil_op(EVE_REPLACE, EVE_REPLACE);
-    eve_draw_rect_simple(outer_area->x1, outer_area->y1, outer_area->x2, outer_area->y2, 0);
-
-    eve_blend_func(EVE_ONE, EVE_ZERO);
-    eve_draw_rect_simple(inner_area->x1 - 2, inner_area->y1 - 2, inner_area->x2 + 2, inner_area->y2 + 2, rin);
-
-    eve_stencil_func(EVE_ALWAYS, 1, 1);
-    eve_stencil_op(EVE_REPLACE, EVE_REPLACE);
-    eve_blend_func(EVE_ZERO, EVE_ONE_MINUS_SRC_ALPHA);
-    eve_color_opa(255);
-    eve_draw_rect_simple(inner_area->x1, inner_area->y1, inner_area->x2, inner_area->y2, rin);
-
-    eve_color_mask(1, 1, 1, 1);
-    eve_blend_func(EVE_DST_ALPHA, EVE_ONE_MINUS_DST_ALPHA);
-    eve_draw_rect_simple(inner_area->x1, inner_area->y1, inner_area->x2, inner_area->y2,
-                         rin); /* Bug in Border Masking  FIXME */
-
-    eve_stencil_func(EVE_NOTEQUAL, 1, 255);
-    eve_blend_func(EVE_SRC_ALPHA, EVE_ONE_MINUS_SRC_ALPHA);
-    //EVE_cmd_dl_burst(COLOR_A(opa));
-
-    eve_color_opa(opa);
-    eve_draw_rect_simple(outer_area->x1, outer_area->y1, outer_area->x2, outer_area->y2, rout);
-
-    eve_restore_context();
-    EVE_end_cmd_burst();
-    EVE_execute_cmd();
-    EVE_start_cmd_burst();
-}
-
 
 
 void lv_draw_eve_border(lv_draw_eve_unit_t * draw_unit, const lv_draw_border_dsc_t * dsc, const lv_area_t * coords)
@@ -114,7 +85,20 @@ void lv_draw_eve_border(lv_draw_eve_unit_t * draw_unit, const lv_draw_border_dsc
     if(dsc->opa <= LV_OPA_MIN) return;
     if(dsc->width == 0) return;
     if(dsc->side == LV_BORDER_SIDE_NONE) return;
+    /*
+LV_LOG("BORDE********\n");
+    LV_LOG("x1: %d\n", draw_unit->base_unit.clip_area->x1);
+    LV_LOG("y1: %d\n", draw_unit->base_unit.clip_area->y1);
+    LV_LOG("X2: %d\n", draw_unit->base_unit.clip_area->x2);
+    LV_LOG("y2: %d\n", draw_unit->base_unit.clip_area->y2);
 
+    LV_LOG("cx1: %d\n", coords->x1);
+    LV_LOG("cy1: %d\n", coords->y1);
+    LV_LOG("cx2: %d\n", coords->x2);
+    LV_LOG("cy2: %d\n", coords->y2);
+    LV_LOG("width: %d\n", dsc->width);
+
+    LV_LOG("\n");*/
     int32_t coords_w = lv_area_get_width(coords);
     int32_t coords_h = lv_area_get_height(coords);
     int32_t rout = dsc->radius;
@@ -124,15 +108,16 @@ void lv_draw_eve_border(lv_draw_eve_unit_t * draw_unit, const lv_draw_border_dsc
     /*Get the inner area*/
     lv_area_t area_inner;
     lv_area_copy(&area_inner, coords);
-    area_inner.x1 += ((dsc->side & LV_BORDER_SIDE_LEFT) ? dsc->width : - (dsc->width >> 1));
-    area_inner.x2 -= ((dsc->side & LV_BORDER_SIDE_RIGHT) ? dsc->width : - (dsc->width >> 1));
-    area_inner.y1 += ((dsc->side & LV_BORDER_SIDE_TOP) ? dsc->width : - (dsc->width >> 1));
-    area_inner.y2 -= ((dsc->side & LV_BORDER_SIDE_BOTTOM) ? dsc->width : - (dsc->width >> 1));
+    area_inner.x1 += ((dsc->side & LV_BORDER_SIDE_LEFT) ? dsc->width : - (dsc->width ));
+    area_inner.x2 -= ((dsc->side & LV_BORDER_SIDE_RIGHT) ? dsc->width : - (dsc->width ));
+    area_inner.y1 += ((dsc->side & LV_BORDER_SIDE_TOP) ? dsc->width : - (dsc->width ));
+    area_inner.y2 -= ((dsc->side & LV_BORDER_SIDE_BOTTOM) ? dsc->width : - (dsc->width ));
 
     int32_t rin = rout - dsc->width;
     if(rin < 0) rin = 0;
-    //eve_scissor_coords(draw_unit->base_unit.clip_area->x1, draw_unit->base_unit.clip_area->y1);
-    //eve_scissor_size(lv_area_get_width(draw_unit->base_unit.clip_area + 1), lv_area_get_height(draw_unit->base_unit.clip_area + 1));
+
+    eve_scissor(coords->x1, coords->y1, coords->x2, coords->y2);
+
     eve_save_context();
 
     eve_color(dsc->color);
@@ -144,7 +129,7 @@ void lv_draw_eve_border(lv_draw_eve_unit_t * draw_unit, const lv_draw_border_dsc
     eve_draw_rect_simple(coords->x1, coords->y1, coords->x2, coords->y2, 0);
 
     eve_blend_func(EVE_ONE, EVE_ZERO);
-    eve_draw_rect_simple(area_inner.x1 - 2, area_inner.y1 - 2, area_inner.x2 + 2, area_inner.y2 + 2, rin);
+    eve_draw_rect_simple(area_inner.x1 - 2, area_inner.y1 - 1, area_inner.x2 + 1, area_inner.y2 + 2, rin);
 
     eve_stencil_func(EVE_ALWAYS, 1, 1);
     eve_stencil_op(EVE_REPLACE, EVE_REPLACE);
@@ -153,14 +138,16 @@ void lv_draw_eve_border(lv_draw_eve_unit_t * draw_unit, const lv_draw_border_dsc
     eve_draw_rect_simple(area_inner.x1, area_inner.y1, area_inner.x2, area_inner.y2, rin);
 
     eve_color_mask(1, 1, 1, 1);
-    eve_blend_func(EVE_DST_ALPHA, EVE_ONE_MINUS_DST_ALPHA);
-    eve_draw_rect_simple(area_inner.x1, area_inner.y1, area_inner.x2, area_inner.y2,
-                         rin); /* Bug in Border Masking  FIXME */
+
+    if (dsc->side == LV_BORDER_SIDE_FULL)
+    {
+        eve_blend_func(EVE_DST_ALPHA, EVE_ONE_MINUS_DST_ALPHA);
+        eve_draw_rect_simple(area_inner.x1, area_inner.y1, area_inner.x2, area_inner.y2, rin);
+    }
 
     eve_stencil_func(EVE_NOTEQUAL, 1, 255);
     eve_blend_func(EVE_SRC_ALPHA, EVE_ONE_MINUS_SRC_ALPHA);
-    //EVE_cmd_dl_burst(COLOR_A(opa));
-
+    
     eve_color_opa(dsc->opa);
     eve_draw_rect_simple(coords->x1, coords->y1, coords->x2, coords->y2, rout);
 

@@ -30,10 +30,10 @@
  *  STATIC VARIABLES
  **********************/
 
-static uint16_t scissor_x = 0;
-static uint16_t scissor_y = 0;
-static uint16_t scissor_w = 0;
-static uint16_t scissor_h = 0;
+static uint16_t scissor_x1 = 0;
+static uint16_t scissor_y1 = 0;
+static uint16_t scissor_x2 = 0;
+static uint16_t scissor_y2 = 0;
 
 static DrawingContext ct = {
     .primitive = ZERO_VALUE,
@@ -82,27 +82,24 @@ void eve_primitive(uint8_t context)
     }
 }
 
-
-void eve_scissor(uint16_t x, uint16_t y, uint16_t w, uint16_t h)
+void eve_scissor(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2)
 {
-    if(x != scissor_x || y != scissor_y || w != scissor_w || h != scissor_h) {
-        EVE_cmd_dl_burst(SCISSOR_XY(x, y));
-        EVE_cmd_dl_burst(SCISSOR_SIZE(w, h));
-        scissor_w = w;
-        scissor_h = h;
-        scissor_x = x;
-        scissor_y = y;
+    if (x1 != scissor_x1 || y1 != scissor_y1)
+    {
+        int16_t adjusted_x1 = x1 > 0 ? x1 - 1 : 0;
+        int16_t adjusted_y1 = y1 > 0 ? y1 - 1 : 0;
+        EVE_cmd_dl_burst(SCISSOR_XY(adjusted_x1, adjusted_y1));
+        scissor_x1 = x1;
+        scissor_y1 = y1;
     }
 
-}
-
-
-void eve_scissor_size(uint16_t w, uint16_t h)
-{
-    if(w != scissor_w || h != scissor_h) {
+    if (x2 != scissor_x2 || y2 != scissor_y2)
+    {
+        uint16_t w = x2 - x1 + 3;
+        uint16_t h = y2 - y1 + 3;
         EVE_cmd_dl_burst(SCISSOR_SIZE(w, h));
-        scissor_w = w;
-        scissor_h = h;
+        scissor_x2 = x2;
+        scissor_y2 = y2;
     }
 }
 
@@ -198,19 +195,13 @@ void eve_draw_circle_simple(int16_t coord_x1, int16_t coord_y1, uint16_t radius_
 
 void eve_draw_rect_simple(int16_t coord_x1, int16_t coord_y1, int16_t coord_x2, int16_t coord_y2, uint16_t radius)
 {
-    int16_t adj_pixel = 0;
     eve_primitive(RECTS);
     if(radius > 1) {
         eve_line_width(radius * 16);
-        adj_pixel = 1;
-    }
-    else {
-        radius = 0;
-        eve_line_width(16);
     }
 
-    eve_vertex_2f(coord_x1 + radius - adj_pixel, coord_y1 + radius - adj_pixel);
-    eve_vertex_2f(coord_x2 - radius + adj_pixel, coord_y2 - radius + adj_pixel);
+    eve_vertex_2f(coord_x1 + radius, coord_y1 + radius);
+    eve_vertex_2f(coord_x2 - radius, coord_y2 - radius);
 }
 
 void eve_mask_round(int16_t coord_x1, int16_t coord_y1, int16_t coord_x2, int16_t coord_y2, int16_t radius)
