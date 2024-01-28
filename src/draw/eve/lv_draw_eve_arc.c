@@ -330,6 +330,9 @@ static void draw_eve_arc(lv_draw_eve_unit_t * draw_unit, const lv_draw_arc_dsc_t
         eve_restore_context();
     }
 
+    EVE_end_cmd_burst();
+    EVE_execute_cmd();
+    EVE_start_cmd_burst();
 }
 
 

@@ -147,11 +147,12 @@ LV_LOG("BORDE********\n");
 
     eve_stencil_func(EVE_NOTEQUAL, 1, 255);
     eve_blend_func(EVE_SRC_ALPHA, EVE_ONE_MINUS_SRC_ALPHA);
-    
+
     eve_color_opa(dsc->opa);
     eve_draw_rect_simple(coords->x1, coords->y1, coords->x2, coords->y2, rout);
 
     eve_restore_context();
+    
     EVE_end_cmd_burst();
     EVE_execute_cmd();
     EVE_start_cmd_burst();
