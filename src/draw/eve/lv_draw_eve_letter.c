@@ -72,6 +72,13 @@ void lv_draw_eve_label(lv_draw_eve_unit_t * draw_unit, const lv_draw_label_dsc_t
     eve_scissor(draw_unit->base_unit.clip_area->x1, draw_unit->base_unit.clip_area->y1, draw_unit->base_unit.clip_area->x2, draw_unit->base_unit.clip_area->y2);
     eve_save_context();
     eve_primitive(BITMAPS);
+
+    uint16_t width = draw_unit->base_unit.clip_area->x2 - draw_unit->base_unit.clip_area->x1;
+    uint16_t height = draw_unit->base_unit.clip_area->y2 - draw_unit->base_unit.clip_area->y1;
+
+    EVE_cmd_dl_burst(BITMAP_SIZE_H(width, height));
+    EVE_cmd_dl_burst(BITMAP_LAYOUT_H(width, height));
+    
     //LV_LOG("%s\r\n ", dsc->text);
     //draw_unit->target_layer->user_data = (lv_font_t *)dsc->font;
     font_static = dsc->font;

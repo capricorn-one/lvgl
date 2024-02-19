@@ -29,9 +29,10 @@
  *  STATIC PROTOTYPES
  **********************/
 static void convert_RGB565A8_to_ARGB4444(const uint8_t * src, uint8_t * dst_argb4444, uint16_t width, uint16_t height);
-static void convert_RGB565A8_to_ARGB1555(const uint8_t * src, uint8_t * dst, uint16_t width, uint16_t height);
-static void convert_ARGB8888_to_ARGB4444(const uint8_t * src, uint8_t * dst, uint16_t width, uint16_t height);
+// static void convert_RGB565A8_to_ARGB1555(const uint8_t * src, uint8_t * dst, uint16_t width, uint16_t height);
+// static void convert_ARGB8888_to_ARGB4444(const uint8_t * src, uint8_t * dst, uint16_t width, uint16_t height);
 
+static void draw_eve_flash_animation(lv_draw_eve_unit_t * draw_unit, lv_image_dsc_t * dsc, const lv_area_t * coords);
 /**********************
  *  STATIC VARIABLES
  **********************/
@@ -74,9 +75,13 @@ void lv_draw_eve_layer(lv_draw_eve_unit_t * draw_unit, const lv_draw_image_dsc_t
 
 void lv_draw_eve_image(lv_draw_eve_unit_t * draw_unit, const lv_draw_image_dsc_t * draw_dsc, const lv_area_t * coords)
 {
-
     const lv_image_dsc_t * img_dsc = draw_dsc->src;
     const uint8_t * img_src = img_dsc->data;
+
+    if(img_src[0] == 0xDE && img_src[1] == 0xAD && img_src[2] == 0xBE && img_src[3] == 0xEF) {
+        draw_eve_flash_animation(draw_unit, img_dsc, coords);
+        return;
+    }
 
     int32_t img_w = img_dsc->header.w;
     int32_t img_h = img_dsc->header.h;
@@ -92,12 +97,6 @@ void lv_draw_eve_image(lv_draw_eve_unit_t * draw_unit, const lv_draw_image_dsc_t
 
         uint32_t free_ramg_block = next_free_ramg_block(TYPE_IMAGE);
         uint32_t start_addr_ramg = get_ramg_ptr();
-
-        lv_log("Image width: %d\n", clip_w);
-        lv_log("Image height: %d\n", clip_h);
-
-        lv_log("ImageID: %lu\n", img_eveId);
-        lv_log("Free RAM_G Block: %lu\n", free_ramg_block);
 
         /* Load image to RAM_G */
         EVE_end_cmd_burst();
@@ -127,9 +126,6 @@ void lv_draw_eve_image(lv_draw_eve_unit_t * draw_unit, const lv_draw_image_dsc_t
                 break;
         }
 
-        lv_log("start_addr_ramg: %d\n", start_addr_ramg);
-        lv_log("img_size: %d\n", img_size);
-
         EVE_memWrite_flash_buffer(start_addr_ramg, buffer_converted, (uint32_t)img_size);
 
         //lv_free(temp_buff);
@@ -158,9 +154,9 @@ void lv_draw_eve_image(lv_draw_eve_unit_t * draw_unit, const lv_draw_image_dsc_t
     EVE_cmd_dl_burst(BITMAP_SIZE(EVE_NEAREST, EVE_BORDER, EVE_BORDER, clip_w,
                                  clip_h)); /*real height and wide is mandatory for rotation a scale (Clip Area)*/
                                  
-    if((clip_w > 0x1FF) || (clip_h > 0x1FF)) {
-        EVE_cmd_dl_burst(BITMAP_SIZE_H(clip_w, clip_h));
-    }
+    // if((clip_w > 0x1FF) || (clip_h > 0x1FF)) {
+    EVE_cmd_dl_burst(BITMAP_SIZE_H(clip_w, clip_h));
+    // }
 
     uint8_t eve_format = EVE_ARGB4;
     switch(color_f) {
@@ -186,9 +182,9 @@ void lv_draw_eve_image(lv_draw_eve_unit_t * draw_unit, const lv_draw_image_dsc_t
 
     EVE_cmd_dl_burst(BITMAP_LAYOUT(eve_format, img_stride, img_h));
 
-    if((img_stride > 0x3FFUL) || (img_h > 0x1FFUL)) {
-        EVE_cmd_dl_burst(BITMAP_LAYOUT_H(img_stride, img_h));
-    }
+    // if((img_stride > 0x3FFUL) || (img_h > 0x1FFUL)) {
+    EVE_cmd_dl_burst(BITMAP_LAYOUT_H(img_stride, img_h));
+    // }
 
     if(draw_dsc->rotation || draw_dsc->scale_x != LV_SCALE_NONE || draw_dsc->scale_y != LV_SCALE_NONE) {
         EVE_cmd_dl_burst(CMD_LOADIDENTITY);
@@ -248,46 +244,87 @@ static void convert_RGB565A8_to_ARGB4444(const uint8_t * src, uint8_t * dst, uin
     }
 }
 
-static void convert_RGB565A8_to_ARGB1555(const uint8_t * src, uint8_t * dst, uint16_t width, uint16_t height)
-{
-    int pixel_count = width * height;
-    uint16_t * src_rgb565 = (uint16_t *) src;
-    uint8_t * src_alpha = (uint8_t *)src + 2 * pixel_count;
+// static void convert_RGB565A8_to_ARGB1555(const uint8_t * src, uint8_t * dst, uint16_t width, uint16_t height)
+// {
+//     int pixel_count = width * height;
+//     uint16_t * src_rgb565 = (uint16_t *) src;
+//     uint8_t * src_alpha = (uint8_t *)src + 2 * pixel_count;
 
-    for(int i = 0; i < pixel_count; i++) {
+//     for(int i = 0; i < pixel_count; i++) {
 
-        uint16_t rgb565 = src_rgb565[i];
-        uint8_t alpha = src_alpha[i];
-        uint8_t r5 = (rgb565 >> 11) & 0x1F;
-        uint8_t g6 = (rgb565 >> 5) & 0x3F;
-        uint8_t b5 = rgb565 & 0x1F;
-        uint8_t a1 = alpha >= 128 ? 1 : 0;
+//         uint16_t rgb565 = src_rgb565[i];
+//         uint8_t alpha = src_alpha[i];
+//         uint8_t r5 = (rgb565 >> 11) & 0x1F;
+//         uint8_t g6 = (rgb565 >> 5) & 0x3F;
+//         uint8_t b5 = rgb565 & 0x1F;
+//         uint8_t a1 = alpha >= 128 ? 1 : 0;
 
-        uint16_t argb1555 = (a1 << 15) | (r5 << 10) | ((g6 >> 1) << 5) | b5;
+//         uint16_t argb1555 = (a1 << 15) | (r5 << 10) | ((g6 >> 1) << 5) | b5;
 
-        dst[2 * i] = argb1555 & 0xFF;
-        dst[2 * i + 1] = (argb1555 >> 8) & 0xFF;
+//         dst[2 * i] = argb1555 & 0xFF;
+//         dst[2 * i + 1] = (argb1555 >> 8) & 0xFF;
 
-    }
-}
+//     }
+// }
 
-static void convert_ARGB8888_to_ARGB4444(const uint8_t * src, uint8_t * dst, uint16_t width, uint16_t height)
-{
-    int pixel_count = width * height;
+// static void convert_ARGB8888_to_ARGB4444(const uint8_t * src, uint8_t * dst, uint16_t width, uint16_t height)
+// {
+//     int pixel_count = width * height;
 
-    for(int i = 0; i < pixel_count; i++) {
-        uint8_t blue = src[4 * i];
-        uint8_t green = src[4 * i + 1];
-        uint8_t red = src[4 * i + 2];
-        uint8_t alpha = src[4 * i + 3];
-        uint8_t r4 = red >> 4;
-        uint8_t g4 = green >> 4;
-        uint8_t b4 = blue >> 4;
-        uint8_t a4 = alpha >> 4;
-        uint16_t argb4444 = (a4 << 12) | (r4 << 8) | (g4 << 4) | b4;
+//     for(int i = 0; i < pixel_count; i++) {
+//         uint8_t blue = src[4 * i];
+//         uint8_t green = src[4 * i + 1];
+//         uint8_t red = src[4 * i + 2];
+//         uint8_t alpha = src[4 * i + 3];
+//         uint8_t r4 = red >> 4;
+//         uint8_t g4 = green >> 4;
+//         uint8_t b4 = blue >> 4;
+//         uint8_t a4 = alpha >> 4;
+//         uint16_t argb4444 = (a4 << 12) | (r4 << 8) | (g4 << 4) | b4;
 
-        dst[2 * i] = argb4444 & 0xFF;
-        dst[2 * i + 1] = (argb4444 >> 8) & 0xFF;
+//         dst[2 * i] = argb4444 & 0xFF;
+//         dst[2 * i + 1] = (argb4444 >> 8) & 0xFF;
+//     }
+// }
+
+static void draw_eve_flash_animation(lv_draw_eve_unit_t * draw_unit, lv_image_dsc_t * dsc, const lv_area_t * coords) {
+
+    static u_int16_t current_frame = 0;
+
+    uint32_t aoptr = dsc->data[7] << 24 | dsc->data[6] << 16 | dsc->data[5] << 8 | dsc->data[4];
+    uint16_t num_frames = dsc->data[9] << 8 | dsc->data[8];
+    uint8_t loop = dsc->data[10];
+
+    lv_color_t new_color = lv_color_make(0xFF, 0x44, current_frame*2);
+
+    eve_scissor(draw_unit->base_unit.clip_area->x1, draw_unit->base_unit.clip_area->y1, draw_unit->base_unit.clip_area->x2, draw_unit->base_unit.clip_area->y2);
+
+    eve_save_context();
+
+    // if(draw_dsc->recolor_opa > LV_OPA_MIN) {
+        eve_color_opa(75);
+        eve_color(new_color);
+        // eve_color(draw_dsc->recolor);
+    // }
+
+    // put it here
+    EVE_cmd_dl_burst(VERTEX_FORMAT(4));
+
+    EVE_cmd_animframe_burst(draw_unit->base_unit.clip_area->x1 + dsc->header.w / 2, draw_unit->base_unit.clip_area->y1 + dsc->header.h / 2, aoptr, current_frame++);
+
+    eve_restore_context();
+    EVE_end_cmd_burst();
+    EVE_execute_cmd();
+
+    EVE_start_cmd_burst();
+
+    if(current_frame >= num_frames) {
+        if(loop) {
+            current_frame = 0;
+        }
+        else {
+            current_frame = num_frames - 1;
+        }
     }
 }
 

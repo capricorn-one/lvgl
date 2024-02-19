@@ -19,6 +19,8 @@ extern "C" {
 #include "../lv_draw.h"
 #if LV_USE_DRAW_EVE
 
+// #include "lv_draw_eve_flash_anim.h"
+
 #include "../../misc/lv_area.h"
 #include "../../misc/lv_color.h"
 
@@ -37,6 +39,12 @@ typedef struct {
     void * eve;
 } lv_draw_eve_unit_t;
 
+typedef struct {
+    uint32_t aoptr;
+    uint16_t num_frames;
+    uint16_t current_frame;
+    bool loop;
+} lv_draw_eve_flash_anim_dsc_t;
 
 /**********************
  * GLOBAL PROTOTYPES
@@ -63,6 +71,8 @@ extern void lv_draw_eve_label(lv_draw_eve_unit_t * draw_unit, const lv_draw_labe
 extern void lv_draw_eve_arc(lv_draw_eve_unit_t * draw_unit, const lv_draw_arc_dsc_t * dsc, const lv_area_t * coords);
 
 extern void lv_draw_eve_triangle(lv_draw_eve_unit_t * draw_unit, const lv_draw_triangle_dsc_t * dsc);
+
+// extern void lv_draw_eve_flash_animation(lv_draw_eve_unit_t * draw_unit, const lv_draw_eve_flash_anim_dsc_t * dsc, const lv_area_t * coords);
 
 /**********************
  *      MACROS
