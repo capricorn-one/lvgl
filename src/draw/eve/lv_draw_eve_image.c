@@ -72,7 +72,6 @@ void lv_draw_eve_layer(lv_draw_eve_unit_t * draw_unit, const lv_draw_image_dsc_t
 
 }
 
-
 void lv_draw_eve_image(lv_draw_eve_unit_t * draw_unit, const lv_draw_image_dsc_t * draw_dsc, const lv_area_t * coords)
 {
 
@@ -85,8 +84,8 @@ void lv_draw_eve_image(lv_draw_eve_unit_t * draw_unit, const lv_draw_image_dsc_t
     int32_t clip_h = lv_area_get_height(draw_unit->base_unit.clip_area);
     uint16_t color_f = img_dsc->header.cf;
     uint16_t img_stride = 0; /*Override draw_dsc->header.stride;*/
-    int32_t img_size = img_w * img_h * 2;
-
+    int32_t img_size = img_w * img_h * 2;    
+    
     uint32_t img_eveId = find_ramg_image(img_src);
 
     if(img_eveId == NOT_FOUND_BLOCK) { /* New image to load  */
@@ -94,11 +93,16 @@ void lv_draw_eve_image(lv_draw_eve_unit_t * draw_unit, const lv_draw_image_dsc_t
         uint32_t free_ramg_block = next_free_ramg_block(TYPE_IMAGE);
         uint32_t start_addr_ramg = get_ramg_ptr();
 
+        lv_log("Image width: %d\n", clip_w);
+        lv_log("Image height: %d\n", clip_h);
+
+        lv_log("ImageID: %lu\n", img_eveId);
+        lv_log("Free RAM_G Block: %lu\n", free_ramg_block);
 
         /* Load image to RAM_G */
         EVE_end_cmd_burst();
 
-        LV_ATTRIBUTE_MEM_ALIGN uint8_t  temp_buff[img_size];// = lv_malloc_zeroed(img_size);
+        // LV_ATTRIBUTE_MEM_ALIGN uint8_t  temp_buff[img_size];// = lv_malloc_zeroed(img_size);
 
         uint8_t * buffer_converted = NULL;
 
@@ -110,18 +114,21 @@ void lv_draw_eve_image(lv_draw_eve_unit_t * draw_unit, const lv_draw_image_dsc_t
             case LV_COLOR_FORMAT_RGB565 :
                 buffer_converted = (uint8_t *)img_src;
                 break;
-            case LV_COLOR_FORMAT_RGB565A8 :
-                //convert_RGB565A8_to_ARGB4444(src_buf, temp_buff, img_w, img_h);
-                convert_RGB565A8_to_ARGB1555(img_src, temp_buff, img_w, img_h);
-                buffer_converted = temp_buff;
-                break;
-            case LV_COLOR_FORMAT_ARGB8888 :
-                convert_ARGB8888_to_ARGB4444(img_src, temp_buff, img_w, img_h);
-                buffer_converted = temp_buff;
-                break;
+            // case LV_COLOR_FORMAT_RGB565A8 :
+            //     //convert_RGB565A8_to_ARGB4444(src_buf, temp_buff, img_w, img_h);
+            //     convert_RGB565A8_to_ARGB1555(img_src, temp_buff, img_w, img_h);
+            //     buffer_converted = temp_buff;
+            //     break;
+            // case LV_COLOR_FORMAT_ARGB8888 :
+            //     convert_ARGB8888_to_ARGB4444(img_src, temp_buff, img_w, img_h);
+            //     buffer_converted = temp_buff;
+            //     break;
             default :
                 break;
         }
+
+        lv_log("start_addr_ramg: %d\n", start_addr_ramg);
+        lv_log("img_size: %d\n", img_size);
 
         EVE_memWrite_flash_buffer(start_addr_ramg, buffer_converted, (uint32_t)img_size);
 
@@ -147,8 +154,13 @@ void lv_draw_eve_image(lv_draw_eve_unit_t * draw_unit, const lv_draw_image_dsc_t
     EVE_cmd_dl_burst(BITMAP_SOURCE(img_addr));
     //EVE_cmd_dl_burst(BITMAP_LAYOUT_H(); /*TODO*/
     //EVE_cmd_dl_burst(BITMAP_SIZE_H)();
+
     EVE_cmd_dl_burst(BITMAP_SIZE(EVE_NEAREST, EVE_BORDER, EVE_BORDER, clip_w,
                                  clip_h)); /*real height and wide is mandatory for rotation a scale (Clip Area)*/
+                                 
+    if((clip_w > 0x1FF) || (clip_h > 0x1FF)) {
+        EVE_cmd_dl_burst(BITMAP_SIZE_H(clip_w, clip_h));
+    }
 
     uint8_t eve_format = EVE_ARGB4;
     switch(color_f) {
@@ -173,6 +185,10 @@ void lv_draw_eve_image(lv_draw_eve_unit_t * draw_unit, const lv_draw_image_dsc_t
     }
 
     EVE_cmd_dl_burst(BITMAP_LAYOUT(eve_format, img_stride, img_h));
+
+    if((img_stride > 0x3FFUL) || (img_h > 0x1FFUL)) {
+        EVE_cmd_dl_burst(BITMAP_LAYOUT_H(img_stride, img_h));
+    }
 
     if(draw_dsc->rotation || draw_dsc->scale_x != LV_SCALE_NONE || draw_dsc->scale_y != LV_SCALE_NONE) {
         EVE_cmd_dl_burst(CMD_LOADIDENTITY);

@@ -130,6 +130,7 @@ bool update_ramg_block(uint8_t id, uint8_t * src, uint32_t addr, uint32_t sz)
     update_ramg_ptr(sz);
 
     if(ramGptr > EVE_RAM_G_SIZE) {
+        LV_LOG_ERROR("RAM_G overflow");
         return true;
     }
     else {

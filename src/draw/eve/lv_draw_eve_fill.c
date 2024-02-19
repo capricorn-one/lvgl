@@ -37,19 +37,17 @@ void lv_draw_eve_fill(lv_draw_eve_unit_t * draw_unit, const lv_draw_fill_dsc_t *
     int32_t bg_h = lv_area_get_height(coords);
     int32_t real_radius = LV_MIN3(bg_w / 2, bg_h / 2, rad);
 
-    LV_LOG("FILL********\n");
-    LV_LOG("x1: %d\n", draw_unit->base_unit.clip_area->x1);
-    LV_LOG("y1: %d\n", draw_unit->base_unit.clip_area->y1);
-    LV_LOG("X2: %d\n", draw_unit->base_unit.clip_area->x2);
-    LV_LOG("y2: %d\n", draw_unit->base_unit.clip_area->y2);
+    LV_LOG_TRACE("FILL********");
+    LV_LOG_TRACE("x1: %d", draw_unit->base_unit.clip_area->x1);
+    LV_LOG_TRACE("y1: %d", draw_unit->base_unit.clip_area->y1);
+    LV_LOG_TRACE("X2: %d", draw_unit->base_unit.clip_area->x2);
+    LV_LOG_TRACE("y2: %d", draw_unit->base_unit.clip_area->y2);
 /*
     LV_LOG("cx1: %d\n", coords->x1);
     LV_LOG("cy1: %d\n", coords->y1);
     LV_LOG("cx2: %d\n", coords->x2);
     LV_LOG("cy2: %d\n", coords->y2);
 */
-    LV_LOG("\n");
-
     eve_scissor(draw_unit->base_unit.clip_area->x1, draw_unit->base_unit.clip_area->y1, draw_unit->base_unit.clip_area->x2, draw_unit->base_unit.clip_area->y2);
     eve_save_context();
 
