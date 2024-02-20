@@ -29,8 +29,8 @@
  *  STATIC PROTOTYPES
  **********************/
 static void convert_RGB565A8_to_ARGB4444(const uint8_t * src, uint8_t * dst_argb4444, uint16_t width, uint16_t height);
-// static void convert_RGB565A8_to_ARGB1555(const uint8_t * src, uint8_t * dst, uint16_t width, uint16_t height);
-// static void convert_ARGB8888_to_ARGB4444(const uint8_t * src, uint8_t * dst, uint16_t width, uint16_t height);
+static void convert_RGB565A8_to_ARGB1555(const uint8_t * src, uint8_t * dst, uint16_t width, uint16_t height);
+static void convert_ARGB8888_to_ARGB4444(const uint8_t * src, uint8_t * dst, uint16_t width, uint16_t height);
 
 static void draw_eve_flash_animation(lv_draw_eve_unit_t * draw_unit, lv_image_dsc_t * dsc, const lv_area_t * coords);
 /**********************
@@ -101,7 +101,7 @@ void lv_draw_eve_image(lv_draw_eve_unit_t * draw_unit, const lv_draw_image_dsc_t
         /* Load image to RAM_G */
         EVE_end_cmd_burst();
 
-        // LV_ATTRIBUTE_MEM_ALIGN uint8_t  temp_buff[img_size];// = lv_malloc_zeroed(img_size);
+        LV_ATTRIBUTE_MEM_ALIGN uint8_t  temp_buff[img_size];// = lv_malloc_zeroed(img_size);
 
         uint8_t * buffer_converted = NULL;
 
@@ -113,15 +113,15 @@ void lv_draw_eve_image(lv_draw_eve_unit_t * draw_unit, const lv_draw_image_dsc_t
             case LV_COLOR_FORMAT_RGB565 :
                 buffer_converted = (uint8_t *)img_src;
                 break;
-            // case LV_COLOR_FORMAT_RGB565A8 :
-            //     //convert_RGB565A8_to_ARGB4444(src_buf, temp_buff, img_w, img_h);
-            //     convert_RGB565A8_to_ARGB1555(img_src, temp_buff, img_w, img_h);
-            //     buffer_converted = temp_buff;
-            //     break;
-            // case LV_COLOR_FORMAT_ARGB8888 :
-            //     convert_ARGB8888_to_ARGB4444(img_src, temp_buff, img_w, img_h);
-            //     buffer_converted = temp_buff;
-            //     break;
+            case LV_COLOR_FORMAT_RGB565A8 :
+                //convert_RGB565A8_to_ARGB4444(src_buf, temp_buff, img_w, img_h);
+                convert_RGB565A8_to_ARGB1555(img_src, temp_buff, img_w, img_h);
+                buffer_converted = temp_buff;
+                break;
+            case LV_COLOR_FORMAT_ARGB8888 :
+                convert_ARGB8888_to_ARGB4444(img_src, temp_buff, img_w, img_h);
+                buffer_converted = temp_buff;
+                break;
             default :
                 break;
         }
@@ -244,48 +244,48 @@ static void convert_RGB565A8_to_ARGB4444(const uint8_t * src, uint8_t * dst, uin
     }
 }
 
-// static void convert_RGB565A8_to_ARGB1555(const uint8_t * src, uint8_t * dst, uint16_t width, uint16_t height)
-// {
-//     int pixel_count = width * height;
-//     uint16_t * src_rgb565 = (uint16_t *) src;
-//     uint8_t * src_alpha = (uint8_t *)src + 2 * pixel_count;
+static void convert_RGB565A8_to_ARGB1555(const uint8_t * src, uint8_t * dst, uint16_t width, uint16_t height)
+{
+    int pixel_count = width * height;
+    uint16_t * src_rgb565 = (uint16_t *) src;
+    uint8_t * src_alpha = (uint8_t *)src + 2 * pixel_count;
 
-//     for(int i = 0; i < pixel_count; i++) {
+    for(int i = 0; i < pixel_count; i++) {
 
-//         uint16_t rgb565 = src_rgb565[i];
-//         uint8_t alpha = src_alpha[i];
-//         uint8_t r5 = (rgb565 >> 11) & 0x1F;
-//         uint8_t g6 = (rgb565 >> 5) & 0x3F;
-//         uint8_t b5 = rgb565 & 0x1F;
-//         uint8_t a1 = alpha >= 128 ? 1 : 0;
+        uint16_t rgb565 = src_rgb565[i];
+        uint8_t alpha = src_alpha[i];
+        uint8_t r5 = (rgb565 >> 11) & 0x1F;
+        uint8_t g6 = (rgb565 >> 5) & 0x3F;
+        uint8_t b5 = rgb565 & 0x1F;
+        uint8_t a1 = alpha >= 128 ? 1 : 0;
 
-//         uint16_t argb1555 = (a1 << 15) | (r5 << 10) | ((g6 >> 1) << 5) | b5;
+        uint16_t argb1555 = (a1 << 15) | (r5 << 10) | ((g6 >> 1) << 5) | b5;
 
-//         dst[2 * i] = argb1555 & 0xFF;
-//         dst[2 * i + 1] = (argb1555 >> 8) & 0xFF;
+        dst[2 * i] = argb1555 & 0xFF;
+        dst[2 * i + 1] = (argb1555 >> 8) & 0xFF;
 
-//     }
-// }
+    }
+}
 
-// static void convert_ARGB8888_to_ARGB4444(const uint8_t * src, uint8_t * dst, uint16_t width, uint16_t height)
-// {
-//     int pixel_count = width * height;
+static void convert_ARGB8888_to_ARGB4444(const uint8_t * src, uint8_t * dst, uint16_t width, uint16_t height)
+{
+    int pixel_count = width * height;
 
-//     for(int i = 0; i < pixel_count; i++) {
-//         uint8_t blue = src[4 * i];
-//         uint8_t green = src[4 * i + 1];
-//         uint8_t red = src[4 * i + 2];
-//         uint8_t alpha = src[4 * i + 3];
-//         uint8_t r4 = red >> 4;
-//         uint8_t g4 = green >> 4;
-//         uint8_t b4 = blue >> 4;
-//         uint8_t a4 = alpha >> 4;
-//         uint16_t argb4444 = (a4 << 12) | (r4 << 8) | (g4 << 4) | b4;
+    for(int i = 0; i < pixel_count; i++) {
+        uint8_t blue = src[4 * i];
+        uint8_t green = src[4 * i + 1];
+        uint8_t red = src[4 * i + 2];
+        uint8_t alpha = src[4 * i + 3];
+        uint8_t r4 = red >> 4;
+        uint8_t g4 = green >> 4;
+        uint8_t b4 = blue >> 4;
+        uint8_t a4 = alpha >> 4;
+        uint16_t argb4444 = (a4 << 12) | (r4 << 8) | (g4 << 4) | b4;
 
-//         dst[2 * i] = argb4444 & 0xFF;
-//         dst[2 * i + 1] = (argb4444 >> 8) & 0xFF;
-//     }
-// }
+        dst[2 * i] = argb4444 & 0xFF;
+        dst[2 * i + 1] = (argb4444 >> 8) & 0xFF;
+    }
+}
 
 static void draw_eve_flash_animation(lv_draw_eve_unit_t * draw_unit, lv_image_dsc_t * dsc, const lv_area_t * coords) {
 
@@ -293,16 +293,20 @@ static void draw_eve_flash_animation(lv_draw_eve_unit_t * draw_unit, lv_image_ds
 
     uint32_t aoptr = dsc->data[7] << 24 | dsc->data[6] << 16 | dsc->data[5] << 8 | dsc->data[4];
     uint16_t num_frames = dsc->data[9] << 8 | dsc->data[8];
-    uint8_t loop = dsc->data[10];
+    uint16_t loop = dsc->data[11] << 8 | dsc->data[10];
 
-    lv_color_t new_color = lv_color_make(0xFF, 0x44, current_frame*2);
+    if(current_frame >= num_frames) {
+        current_frame = 0;
+    }
+    // lv_color_t new_color = lv_color_make(0xFF, current_frame*3, 0xFF);
+    lv_color_t new_color = lv_color_make(0xFF, 0x33 + current_frame/2, 0x33 + current_frame/3);
 
     eve_scissor(draw_unit->base_unit.clip_area->x1, draw_unit->base_unit.clip_area->y1, draw_unit->base_unit.clip_area->x2, draw_unit->base_unit.clip_area->y2);
-
+    
     eve_save_context();
 
     // if(draw_dsc->recolor_opa > LV_OPA_MIN) {
-        eve_color_opa(75);
+        eve_color_opa(100);
         eve_color(new_color);
         // eve_color(draw_dsc->recolor);
     // }
@@ -310,13 +314,15 @@ static void draw_eve_flash_animation(lv_draw_eve_unit_t * draw_unit, lv_image_ds
     // put it here
     EVE_cmd_dl_burst(VERTEX_FORMAT(4));
 
-    EVE_cmd_animframe_burst(draw_unit->base_unit.clip_area->x1 + dsc->header.w / 2, draw_unit->base_unit.clip_area->y1 + dsc->header.h / 2, aoptr, current_frame++);
+    EVE_cmd_animframe_burst(draw_unit->base_unit.clip_area->x1 + dsc->header.w / 2, draw_unit->base_unit.clip_area->y1 + dsc->header.h / 2, aoptr, current_frame);
 
     eve_restore_context();
     EVE_end_cmd_burst();
     EVE_execute_cmd();
 
     EVE_start_cmd_burst();
+
+    current_frame += 3;
 
     if(current_frame >= num_frames) {
         if(loop) {
