@@ -67,7 +67,7 @@ typedef struct {
 
 extern void eve_save_context(void);
 extern void eve_restore_context(void);
-extern void eve_scissor(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2);
+extern void eve_scissor(int16_t x1, int16_t y1, int16_t x2, int16_t y2);
 extern void eve_primitive(uint8_t context);
 extern void eve_color(lv_color_t color);
 extern void eve_color_opa(lv_opa_t opa);

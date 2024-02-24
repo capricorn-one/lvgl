@@ -39,12 +39,12 @@ typedef struct {
     void * eve;
 } lv_draw_eve_unit_t;
 
-typedef struct {
-    uint32_t aoptr;
-    uint16_t num_frames;
-    uint16_t current_frame;
-    bool loop;
-} lv_draw_eve_flash_anim_dsc_t;
+// typedef struct {
+//     uint32_t aoptr;
+//     uint16_t num_frames;
+//     uint16_t current_frame;
+//     bool loop;
+// } lv_draw_eve_flash_anim_dsc_t;
 
 /**********************
  * GLOBAL PROTOTYPES

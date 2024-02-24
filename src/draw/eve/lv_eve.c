@@ -82,8 +82,13 @@ void eve_primitive(uint8_t context)
     }
 }
 
-void eve_scissor(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2)
+void eve_scissor(int16_t x1, int16_t y1, int16_t x2, int16_t y2)
 {
+    if(x1 < 0) x1 = 0;
+    if(y1 < 0) y1 = 0;
+    if(x2 < 0) x2 = 0;
+    if(y2 < 0) y2 = 0;    
+
     if (x1 != scissor_x1 || y1 != scissor_y1)
     {
         int16_t adjusted_x1 = x1 > 0 ? x1 - 1 : 0;

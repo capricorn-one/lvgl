@@ -32,7 +32,7 @@ static void convert_RGB565A8_to_ARGB4444(const uint8_t * src, uint8_t * dst_argb
 static void convert_RGB565A8_to_ARGB1555(const uint8_t * src, uint8_t * dst, uint16_t width, uint16_t height);
 static void convert_ARGB8888_to_ARGB4444(const uint8_t * src, uint8_t * dst, uint16_t width, uint16_t height);
 
-static void draw_eve_flash_animation(lv_draw_eve_unit_t * draw_unit, lv_image_dsc_t * dsc, const lv_area_t * coords);
+static void draw_eve_flash_animation(lv_draw_eve_unit_t * draw_unit, const lv_draw_image_dsc_t * draw_dsc, const lv_area_t * coords, uint16_t frame, uint16_t num_frames);
 /**********************
  *  STATIC VARIABLES
  **********************/
@@ -79,7 +79,7 @@ void lv_draw_eve_image(lv_draw_eve_unit_t * draw_unit, const lv_draw_image_dsc_t
     const uint8_t * img_src = img_dsc->data;
 
     if(img_src[0] == 0xDE && img_src[1] == 0xAD && img_src[2] == 0xBE && img_src[3] == 0xEF) {
-        draw_eve_flash_animation(draw_unit, img_dsc, coords);
+        draw_eve_flash_animation(draw_unit, draw_dsc, coords, draw_dsc->pivot.x, draw_dsc->pivot.y);
         return;
     }
 
@@ -114,7 +114,7 @@ void lv_draw_eve_image(lv_draw_eve_unit_t * draw_unit, const lv_draw_image_dsc_t
                 buffer_converted = (uint8_t *)img_src;
                 break;
             case LV_COLOR_FORMAT_RGB565A8 :
-                //convert_RGB565A8_to_ARGB4444(src_buf, temp_buff, img_w, img_h);
+                // convert_RGB565A8_to_ARGB4444(src_buf, temp_buff, img_w, img_h);
                 convert_RGB565A8_to_ARGB1555(img_src, temp_buff, img_w, img_h);
                 buffer_converted = temp_buff;
                 break;
@@ -287,51 +287,37 @@ static void convert_ARGB8888_to_ARGB4444(const uint8_t * src, uint8_t * dst, uin
     }
 }
 
-static void draw_eve_flash_animation(lv_draw_eve_unit_t * draw_unit, lv_image_dsc_t * dsc, const lv_area_t * coords) {
+static void draw_eve_flash_animation(lv_draw_eve_unit_t * draw_unit, const lv_draw_image_dsc_t * draw_dsc, const lv_area_t * coords, uint16_t frame, uint16_t num_frames) {
 
-    static u_int16_t current_frame = 0;
-
-    uint32_t aoptr = dsc->data[7] << 24 | dsc->data[6] << 16 | dsc->data[5] << 8 | dsc->data[4];
-    uint16_t num_frames = dsc->data[9] << 8 | dsc->data[8];
-    uint16_t loop = dsc->data[11] << 8 | dsc->data[10];
-
-    if(current_frame >= num_frames) {
-        current_frame = 0;
+    const lv_image_dsc_t * img_dsc = draw_dsc->src;
+    uint32_t aoptr = img_dsc->data[7] << 24 | img_dsc->data[6] << 16 | img_dsc->data[5] << 8 | img_dsc->data[4];
+    
+    if(frame >= num_frames) {
+        frame = 0;
     }
+
     // lv_color_t new_color = lv_color_make(0xFF, current_frame*3, 0xFF);
-    lv_color_t new_color = lv_color_make(0xFF, 0x33 + current_frame/2, 0x33 + current_frame/3);
+    lv_color_t new_color = lv_color_make(0xFF, 0x33 + frame/2, 0x33 + frame/3);
 
     eve_scissor(draw_unit->base_unit.clip_area->x1, draw_unit->base_unit.clip_area->y1, draw_unit->base_unit.clip_area->x2, draw_unit->base_unit.clip_area->y2);
     
     eve_save_context();
 
-    // if(draw_dsc->recolor_opa > LV_OPA_MIN) {
-        eve_color_opa(100);
-        eve_color(new_color);
-        // eve_color(draw_dsc->recolor);
-    // }
+    if(draw_dsc->recolor_opa > LV_OPA_MIN) {
+        eve_color_opa(draw_dsc->recolor_opa);
+        eve_color(draw_dsc->recolor);
+    }
 
     // put it here
     EVE_cmd_dl_burst(VERTEX_FORMAT(4));
 
-    EVE_cmd_animframe_burst(draw_unit->base_unit.clip_area->x1 + dsc->header.w / 2, draw_unit->base_unit.clip_area->y1 + dsc->header.h / 2, aoptr, current_frame);
+    EVE_cmd_animframe_burst(draw_unit->base_unit.clip_area->x1 + img_dsc->header.w / 2, draw_unit->base_unit.clip_area->y1 + img_dsc->header.h / 2, aoptr, frame);
 
     eve_restore_context();
     EVE_end_cmd_burst();
     EVE_execute_cmd();
 
     EVE_start_cmd_burst();
-
-    current_frame += 3;
-
-    if(current_frame >= num_frames) {
-        if(loop) {
-            current_frame = 0;
-        }
-        else {
-            current_frame = num_frames - 1;
-        }
-    }
 }
 
 #endif /*LV_USE_DRAW_EVE*/
